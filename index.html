@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #e8f5e9;
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<h2>Admin Control Panel</h2>
+
+<input id="username" placeholder="Username">
+<input id="minutes" placeholder="Minutes">
+<button onclick="setTime()">Set Time Limit</button>
+<button onclick="forceLogout()">Force Logout</button>
+<button onclick="resetTime()">Reset Used Time</button>
+
+<div id="userList"></div>
+
+<script>
+
+var firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "YOUR_DATABASE_URL",
+  projectId: "YOUR_PROJECT_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
+
+function setTime() {
+  var user = document.getElementById("username").value;
+  var min = parseInt(document.getElementById("minutes").value);
+  db.ref("users/" + user + "/timeLimitSeconds").set(min * 60);
+  alert("Time Updated!");
+}
+
+function forceLogout() {
+  var user = document.getElementById("username").value;
+  db.ref("users/" + user + "/forceLogout").set(true);
+  alert("User Logged Out!");
+}
+
+function resetTime() {
+  var user = document.getElementById("username").value;
+  db.ref("users/" + user + "/usedSeconds").set(0);
+  alert("Usage Reset!");
+}
+
+db.ref("users").on("value", function(snapshot) {
+  var html = "";
+  snapshot.forEach(function(child) {
+    var data = child.val();
+    html += `
+      <div class="card">
+        <b>${child.key}</b><br>
+        Limit: ${data.timeLimitSeconds/60} min<br>
+        Used: ${data.usedSeconds/60} min<br>
+        Status: ${data.isOnline ? "🟢 Online" : "🔴 Offline"}
+      </div>
+    `;
+  });
+  document.getElementById("userList").innerHTML = html;
+});
+
+</script>
+
+</body>
+    </html>
